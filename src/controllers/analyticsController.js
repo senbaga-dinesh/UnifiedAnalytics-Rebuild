@@ -27,12 +27,12 @@ export const collectEvent = async (req, res) => {
       metadata: metadata || null,
     });
 
-    // Invalidate cache
-    try {
-      const cacheKeyAll = `event-summary:${apiKeyValue}:all`;
-      const cacheKeySpecific = `event-summary:${apiKeyValue}:${event.trim()}`;
-      await redisClient.del(cacheKeyAll, cacheKeySpecific);
-    } catch (err) {}
+    // 🔥 CACHE INVALIDATION
+    const apiKey = req.apiKeyInfo.apiKey;
+    await redisClient.del(
+      `event-summary:${apiKey}:all`,
+      `event-summary:${apiKey}:${event}`
+    );
 
     return res.status(201).json({
       message: "Event collected successfully",
@@ -47,7 +47,9 @@ export const collectEvent = async (req, res) => {
   }
 };
 
-// GET /api/analytics/event-summary
+/**
+ * GET /api/analytics/event-summary
+ */
 export const getEventSummary = async (req, res) => {
   try {
     const { event } = req.query;
@@ -62,7 +64,7 @@ export const getEventSummary = async (req, res) => {
       return res.json(JSON.parse(cached));
     }
 
-    // 2️⃣ Query PostgreSQL
+    // 2️⃣ Query database
     const whereClause = { apiKey };
     if (event) whereClause.event = event;
 
@@ -71,7 +73,7 @@ export const getEventSummary = async (req, res) => {
     const byDevice = await Event.findAll({
       attributes: [
         "device",
-        [db.sequelize.fn("COUNT", db.sequelize.col("device")), "count"],
+        [db.sequelize.fn("COUNT", db.sequelize.col("device")), "count"]
       ],
       where: whereClause,
       group: ["device"],
@@ -80,7 +82,7 @@ export const getEventSummary = async (req, res) => {
     const byReferrer = await Event.findAll({
       attributes: [
         "referrer",
-        [db.sequelize.fn("COUNT", db.sequelize.col("referrer")), "count"],
+        [db.sequelize.fn("COUNT", db.sequelize.col("referrer")), "count"]
       ],
       where: whereClause,
       group: ["referrer"],
@@ -88,13 +90,65 @@ export const getEventSummary = async (req, res) => {
 
     const result = { totalEvents, byDevice, byReferrer };
 
-    // 3️⃣ Store in Redis (TTL = 60 sec)
+    // 3️⃣ Save to Redis – 60 seconds
     await redisClient.setex(cacheKey, 60, JSON.stringify(result));
 
     res.json(result);
+
   } catch (err) {
     res.status(500).json({
       message: "Error in summary",
+      error: err.message,
+    });
+  }
+};
+
+/**
+ * GET /api/analytics/user-stats
+ */
+export const getUserStats = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const apiKey = req.apiKeyInfo.apiKey;
+
+    if (!userId || userId.trim() === "") {
+      return res.status(400).json({ message: "userId is required" });
+    }
+
+    const cleanUserId = userId.trim();
+
+    // 1️⃣ Total events for this user
+    const totalEvents = await Event.count({
+      where: { apiKey, userId: cleanUserId }
+    });
+
+    // 2️⃣ Recent events (last 10)
+    const recentEvents = await Event.findAll({
+      where: { apiKey, userId: cleanUserId },
+      order: [["timestamp", "DESC"]],
+      limit: 10,
+    });
+
+    // 3️⃣ Group by device
+    const byDevice = await Event.findAll({
+      attributes: [
+        "device",
+        [db.sequelize.fn("COUNT", db.sequelize.col("device")), "count"]
+      ],
+      where: { apiKey, userId: cleanUserId },
+      group: ["device"],
+    });
+
+    return res.json({
+      userId: cleanUserId,
+      totalEvents,
+      recentEvents,
+      byDevice,
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error fetching user stats",
       error: err.message,
     });
   }
