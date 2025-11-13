@@ -1,6 +1,7 @@
 import { generateApiKey } from "../utils/generateApiKey.js";
 
 describe("Utility: generateApiKey", () => {
+
   test("should return a string", () => {
     const key = generateApiKey();
     expect(typeof key).toBe("string");
@@ -16,4 +17,5 @@ describe("Utility: generateApiKey", () => {
     const key2 = generateApiKey();
     expect(key1).not.toBe(key2);
   });
+
 });
