@@ -3,63 +3,63 @@ import dotenv from "dotenv";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
+
 import { sequelize } from "./config/db.js";
 import db from "./models/index.js";
 import authRoutes from "./routes/authRoutes.js";
-import { redisClient } from "./config/redis.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
-import { swaggerSpec, swaggerUi } from "./docs/swagger.js";
 
+import { swaggerUi, swaggerSpec } from "./docs/swagger.js";
 
-
-
-
-// Load .env file
 dotenv.config();
 
 const app = express();
 
-// Middleware
+// Middlewares
 app.use(express.json());
 app.use(helmet());
 app.use(cors());
 app.use(morgan("dev"));
 
-// Basic test route
+// Test route
 app.get("/", (req, res) => {
-  res.send("🚀 Unified Analytics API is running...");
+  res.send("🚀 Unified Analytics API is running…");
 });
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server started on port ${PORT}`);
-});
-
-//DB
+// DB connection
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log("✅ PostgreSQL connection established");
+    console.log("✅ PostgreSQL connected");
   } catch (err) {
-    console.error("❌ DB connection error:", err.message);
+    console.error("❌ PostgreSQL error:", err.message);
   }
 })();
 
-// Sync models
+// Sync DB
 (async () => {
   try {
     await db.sequelize.sync({ alter: true });
-    console.log("✅ Database synchronized");
+    console.log("✅ DB synchronized");
   } catch (err) {
-    console.error("❌ Error syncing database:", err.message);
+    console.error("❌ Sync error:", err.message);
   }
 })();
 
+// Routes
 app.use("/api/auth", authRoutes);
-
 app.use("/api/analytics", analyticsRoutes);
 
+// Swagger
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// PORT
+const PORT = process.env.PORT || 5000;
+
+// Start server (exported for tests)
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
 export default app;
+export { server };
