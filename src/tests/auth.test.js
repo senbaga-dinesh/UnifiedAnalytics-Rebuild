@@ -1,7 +1,8 @@
 import { jest } from "@jest/globals";
 import request from "supertest";
 
-// 🔥 ESM-compatible mocks
+// Mock dependencies
+// Mock Redis client
 jest.unstable_mockModule("../config/redis.js", () => ({
   redisClient: {
     get: jest.fn(() => null),
@@ -11,6 +12,7 @@ jest.unstable_mockModule("../config/redis.js", () => ({
   }
 }));
 
+// Mock Sequelize models
 jest.unstable_mockModule("../models/index.js", () => ({
   default: {
     sequelize: { close: jest.fn() },
@@ -22,6 +24,7 @@ jest.unstable_mockModule("../models/index.js", () => ({
   }
 }));
 
+// Mock authentication middleware
 jest.unstable_mockModule("../middleware/authMiddleware.js", () => ({
   verifyApiKey: jest.fn((req, res, next) => {
     if (req.headers["x-api-key"] === "MOCK_KEY") {
@@ -35,6 +38,7 @@ jest.unstable_mockModule("../middleware/authMiddleware.js", () => ({
 // MUST import after mocks
 const { default: app } = await import("../server.js");
 
+// Integration tests for Analytics API
 describe("Integration: Analytics API", () => {
 
   test("reject event collection without an API key", async () => {

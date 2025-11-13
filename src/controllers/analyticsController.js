@@ -3,9 +3,7 @@ import { redisClient } from "../config/redis.js";
 
 const Event = db.Event;
 
-/**
- * POST /api/analytics/collect
- */
+// post /api/analytics/collect-event
 export const collectEvent = async (req, res) => {
   try {
     const { event, url, referrer, device, userId, ipAddress, metadata } = req.body;
@@ -27,7 +25,7 @@ export const collectEvent = async (req, res) => {
       metadata: metadata || null,
     });
 
-    // 🔥 CACHE INVALIDATION
+    // CACHE INVALIDATION
     const apiKey = req.apiKeyInfo.apiKey;
     await redisClient.del(
       `event-summary:${apiKey}:all`,
@@ -47,9 +45,7 @@ export const collectEvent = async (req, res) => {
   }
 };
 
-/**
- * GET /api/analytics/event-summary
- */
+// GET /api/analytics/event-summary
 export const getEventSummary = async (req, res) => {
   try {
     const { event } = req.query;
@@ -57,14 +53,14 @@ export const getEventSummary = async (req, res) => {
 
     const cacheKey = `event-summary:${apiKey}:${event || "all"}`;
 
-    // 1️⃣ Check Redis cache
+    // Check Redis cache
     const cached = await redisClient.get(cacheKey);
     if (cached) {
-      console.log("⚡ Served from Redis cache");
+      console.log("Served from Redis cache");
       return res.json(JSON.parse(cached));
     }
 
-    // 2️⃣ Query database
+    // Query database
     const whereClause = { apiKey };
     if (event) whereClause.event = event;
 
@@ -90,7 +86,7 @@ export const getEventSummary = async (req, res) => {
 
     const result = { totalEvents, byDevice, byReferrer };
 
-    // 3️⃣ Save to Redis – 60 seconds
+    // Save to Redis – 60 seconds
     await redisClient.setex(cacheKey, 60, JSON.stringify(result));
 
     res.json(result);
@@ -103,9 +99,7 @@ export const getEventSummary = async (req, res) => {
   }
 };
 
-/**
- * GET /api/analytics/user-stats
- */
+//GET /api/analytics/user-stats
 export const getUserStats = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -117,19 +111,19 @@ export const getUserStats = async (req, res) => {
 
     const cleanUserId = userId.trim();
 
-    // 1️⃣ Total events for this user
+    // Total events for this user
     const totalEvents = await Event.count({
       where: { apiKey, userId: cleanUserId }
     });
 
-    // 2️⃣ Recent events (last 10)
+    // Recent events (last 10)
     const recentEvents = await Event.findAll({
       where: { apiKey, userId: cleanUserId },
       order: [["timestamp", "DESC"]],
       limit: 10,
     });
 
-    // 3️⃣ Group by device
+    // Group by device
     const byDevice = await Event.findAll({
       attributes: [
         "device",

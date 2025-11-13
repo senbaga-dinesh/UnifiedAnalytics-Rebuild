@@ -1,5 +1,6 @@
 import { generateApiKey } from "../utils/generateApiKey.js";
 
+// Tests for the generateApiKey utility function
 describe("Utility: generateApiKey", () => {
 
   test("should return a string", () => {

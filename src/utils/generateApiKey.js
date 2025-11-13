@@ -1,10 +1,6 @@
-// src/utils/generateApiKey.js
 import crypto from "crypto";
 
-/**
- * Generates a secure 64-character API key
- * using cryptographically strong random bytes.
- */
+// Function to generate a secure API key
 export const generateApiKey = () => {
   return crypto.randomBytes(32).toString("hex"); 
 };

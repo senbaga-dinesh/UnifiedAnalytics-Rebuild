@@ -1,4 +1,3 @@
-// src/middleware/authMiddleware.js
 import db from "../models/index.js";
 const ApiKey = db.ApiKey;
 
@@ -11,7 +10,7 @@ export const verifyApiKey = async (req, res, next) => {
     if (!record) return res.status(403).json({ message: "Invalid API key" });
     if (!record.isActive) return res.status(403).json({ message: "API key revoked" });
 
-    // expiry check (optional)
+    // expiry check
     if (record.expiresAt && new Date(record.expiresAt) < new Date()) {
       return res.status(403).json({ message: "API key has expired" });
     }

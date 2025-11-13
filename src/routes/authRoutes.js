@@ -13,15 +13,15 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Auth
- *   description: API Key registration and management
+ *   description: API Key management
  */
 
 /**
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: Register a new app and generate an API key
  *     tags: [Auth]
+ *     summary: Register an app and generate an API key
  *     requestBody:
  *       required: true
  *       content:
@@ -29,15 +29,11 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               appName:
- *                 type: string
- *                 example: MyWebsite
- *               ownerEmail:
- *                 type: string
- *                 example: owner@example.com
+ *               appName: { type: string }
+ *               ownerEmail: { type: string }
  *     responses:
  *       201:
- *         description: API key generated successfully
+ *         description: API key created
  */
 router.post("/register", registerApp);
 
@@ -45,18 +41,16 @@ router.post("/register", registerApp);
  * @swagger
  * /api/auth/api-key:
  *   get:
- *     summary: Get details of an API key
  *     tags: [Auth]
+ *     summary: Get API key details
  *     parameters:
  *       - in: query
  *         name: key
- *         schema:
- *           type: string
  *         required: true
- *         description: API key to lookup
+ *         schema: { type: string }
  *     responses:
  *       200:
- *         description: API key details
+ *         description: Key details returned
  */
 router.get("/api-key", getApiKeyDetails);
 
@@ -64,17 +58,16 @@ router.get("/api-key", getApiKeyDetails);
  * @swagger
  * /api/auth/api-key/{key}:
  *   delete:
- *     summary: Revoke an existing API key
  *     tags: [Auth]
+ *     summary: Revoke an API key
  *     parameters:
  *       - in: path
  *         name: key
  *         required: true
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *     responses:
  *       200:
- *         description: API key revoked
+ *         description: Key revoked
  */
 router.delete("/api-key/:key", revokeApiKey);
 
@@ -82,17 +75,16 @@ router.delete("/api-key/:key", revokeApiKey);
  * @swagger
  * /api/auth/api-key/{key}/regenerate:
  *   put:
- *     summary: Regenerate an API key
  *     tags: [Auth]
+ *     summary: Regenerate an API key
  *     parameters:
  *       - in: path
  *         name: key
  *         required: true
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *     responses:
  *       200:
- *         description: New API key generated
+ *         description: New key generated
  */
 router.put("/api-key/:key/regenerate", regenerateApiKey);
 
@@ -100,11 +92,11 @@ router.put("/api-key/:key/regenerate", regenerateApiKey);
  * @swagger
  * /api/auth/list:
  *   get:
- *     summary: List all API keys
  *     tags: [Auth]
+ *     summary: List all API keys
  *     responses:
  *       200:
- *         description: List of keys
+ *         description: API key list returned
  */
 router.get("/list", listApiKeys);
 

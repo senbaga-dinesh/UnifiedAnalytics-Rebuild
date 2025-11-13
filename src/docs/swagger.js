@@ -18,7 +18,7 @@ const swaggerOptions = {
     ],
   },
 
-  // 👇 IMPORTANT — this tells Swagger where to scan for annotations
+  // Scan for annotations
   apis: ["./src/routes/*.js"],
 };
 

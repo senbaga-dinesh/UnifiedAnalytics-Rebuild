@@ -14,40 +14,33 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Analytics
- *   description: Collect and analyze app events
+ *   description: Analytics event tracking APIs
  */
 
 /**
  * @swagger
  * /api/analytics/collect:
  *   post:
- *     summary: Collect an analytics event
  *     tags: [Analytics]
+ *     summary: Collect an event
  *     parameters:
  *       - in: header
  *         name: x-api-key
  *         required: true
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [event]
  *             properties:
- *               event:
- *                 type: string
- *                 example: page_view
- *               url:
- *                 type: string
- *               device:
- *                 type: string
- *                 example: mobile
+ *               event: { type: string }
+ *               url: { type: string }
+ *               device: { type: string }
  *     responses:
  *       201:
- *         description: Event collected
+ *         description: Event recorded
  */
 router.post("/collect", verifyApiKey, apiLimiter, collectEvent);
 
@@ -55,22 +48,18 @@ router.post("/collect", verifyApiKey, apiLimiter, collectEvent);
  * @swagger
  * /api/analytics/event-summary:
  *   get:
- *     summary: Get analytics summary
  *     tags: [Analytics]
+ *     summary: Summary of events
  *     parameters:
  *       - in: header
  *         name: x-api-key
  *         required: true
- *         schema:
- *           type: string
  *       - in: query
  *         name: event
- *         schema:
- *           type: string
- *           example: page_view
+ *         schema: { type: string }
  *     responses:
  *       200:
- *         description: Analytics summary
+ *         description: Event summary returned
  */
 router.get("/event-summary", verifyApiKey, apiLimiter, getEventSummary);
 
@@ -78,8 +67,8 @@ router.get("/event-summary", verifyApiKey, apiLimiter, getEventSummary);
  * @swagger
  * /api/analytics/user-stats:
  *   get:
- *     summary: Get user-specific analytics
  *     tags: [Analytics]
+ *     summary: Analytics per user
  *     parameters:
  *       - in: header
  *         name: x-api-key
@@ -87,8 +76,7 @@ router.get("/event-summary", verifyApiKey, apiLimiter, getEventSummary);
  *       - in: query
  *         name: userId
  *         required: true
- *         schema:
- *           type: string
+ *         schema: { type: string }
  *     responses:
  *       200:
  *         description: User stats returned

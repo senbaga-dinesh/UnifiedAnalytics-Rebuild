@@ -23,16 +23,16 @@ app.use(morgan("dev"));
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("🚀 Unified Analytics API is running…");
+  res.send("Unified Analytics API is running…");
 });
 
 // DB connection
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log("✅ PostgreSQL connected");
+    console.log("PostgreSQL connected");
   } catch (err) {
-    console.error("❌ PostgreSQL error:", err.message);
+    console.error("PostgreSQL error:", err.message);
   }
 })();
 
@@ -40,9 +40,9 @@ app.get("/", (req, res) => {
 (async () => {
   try {
     await db.sequelize.sync({ alter: true });
-    console.log("✅ DB synchronized");
+    console.log("DB synchronized");
   } catch (err) {
-    console.error("❌ Sync error:", err.message);
+    console.error("Sync error:", err.message);
   }
 })();
 
@@ -58,7 +58,7 @@ const PORT = process.env.PORT || 5000;
 
 // Start server (exported for tests)
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
 export default app;

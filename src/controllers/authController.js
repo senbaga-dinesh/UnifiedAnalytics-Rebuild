@@ -1,12 +1,9 @@
-// src/controllers/authController.js
 import db from "../models/index.js";
 import { generateApiKey } from "../utils/generateApiKey.js";
 
 const ApiKey = db.ApiKey;
 
-/**
- * Register a new app and generate API key
- */
+// Register a new app and generate API key
 export const registerApp = async (req, res) => {
   try {
     const { appName, ownerEmail } = req.body;
@@ -37,9 +34,7 @@ export const registerApp = async (req, res) => {
   }
 };
 
-/**
- * Get details of a specific API key
- */
+// Get details of a specific API key
 export const getApiKeyDetails = async (req, res) => {
   try {
     const { key } = req.query;
@@ -70,9 +65,7 @@ export const getApiKeyDetails = async (req, res) => {
   }
 };
 
-/**
- * Revoke an API key
- */
+// Revoke an API key
 export const revokeApiKey = async (req, res) => {
   try {
     const { key } = req.params;
@@ -95,9 +88,7 @@ export const revokeApiKey = async (req, res) => {
   }
 };
 
-/**
- * Regenerate API key
- */
+// Regenerate API key
 export const regenerateApiKey = async (req, res) => {
   try {
     const { key } = req.params;
@@ -129,9 +120,7 @@ export const regenerateApiKey = async (req, res) => {
   }
 };
 
-/**
- * List all API keys
- */
+// List all API keys
 export const listApiKeys = async (req, res) => {
   try {
     const keys = await ApiKey.findAll({

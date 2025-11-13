@@ -1,15 +1,15 @@
 import rateLimit from "express-rate-limit";
 
-/**
- * API Key–based Rate Limiter
- * Prevents abuse by limiting requests per API key.
- */
+
+// API Key–based Rate Limiter
+// Prevents abuse by limiting requests per API key.
+
 export const apiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 30, // max requests per API key per minute
 
   keyGenerator: (req) => {
-    return req.headers["x-api-key"] || req.ip; // fallback to IP
+    return req.headers["x-api-key"] || req.ip; // fallback to IP if API key is missing
   },
 
   message: {
