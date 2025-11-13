@@ -5,6 +5,10 @@ import cors from "cors";
 import morgan from "morgan";
 import { sequelize } from "./config/db.js";
 import db from "./models/index.js";
+import authRoutes from "./routes/authRoutes.js";
+
+
+
 // Load .env file
 dotenv.config();
 
@@ -46,5 +50,8 @@ app.listen(PORT, () => {
     console.error("❌ Error syncing database:", err.message);
   }
 })();
+
+app.use("/api/auth", authRoutes);
+
 
 export default app;
