@@ -6,6 +6,10 @@ import morgan from "morgan";
 import { sequelize } from "./config/db.js";
 import db from "./models/index.js";
 import authRoutes from "./routes/authRoutes.js";
+import { redisClient } from "./config/redis.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+
+
 
 
 
@@ -52,6 +56,8 @@ app.listen(PORT, () => {
 })();
 
 app.use("/api/auth", authRoutes);
+
+app.use("/api/analytics", analyticsRoutes);
 
 
 export default app;

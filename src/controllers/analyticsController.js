@@ -47,54 +47,54 @@ export const collectEvent = async (req, res) => {
   }
 };
 
-/**
- * GET /api/analytics/event-summary?event=LOGIN
- * Phase 1: DB Aggregation Only (NO REDIS)
- */
+// GET /api/analytics/event-summary
 export const getEventSummary = async (req, res) => {
   try {
     const { event } = req.query;
-    const apiKeyValue = req.apiKeyInfo.apiKey;
+    const apiKey = req.apiKeyInfo.apiKey;
 
-    // Build WHERE clause
-    const whereClause = { apiKey: apiKeyValue };
+    const cacheKey = `event-summary:${apiKey}:${event || "all"}`;
+
+    // 1️⃣ Check Redis cache
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      console.log("⚡ Served from Redis cache");
+      return res.json(JSON.parse(cached));
+    }
+
+    // 2️⃣ Query PostgreSQL
+    const whereClause = { apiKey };
     if (event) whereClause.event = event;
 
-    // Total count
-    const totalEvents = await Event.count({
-      where: whereClause
-    });
+    const totalEvents = await Event.count({ where: whereClause });
 
-    // Group by device
     const byDevice = await Event.findAll({
       attributes: [
         "device",
-        [db.sequelize.fn("COUNT", db.sequelize.col("device")), "count"]
+        [db.sequelize.fn("COUNT", db.sequelize.col("device")), "count"],
       ],
       where: whereClause,
-      group: ["device"]
+      group: ["device"],
     });
 
-    // Group by referrer
     const byReferrer = await Event.findAll({
       attributes: [
         "referrer",
-        [db.sequelize.fn("COUNT", db.sequelize.col("referrer")), "count"]
+        [db.sequelize.fn("COUNT", db.sequelize.col("referrer")), "count"],
       ],
       where: whereClause,
-      group: ["referrer"]
+      group: ["referrer"],
     });
 
-    return res.json({
-      eventFilter: event || "all",
-      totalEvents,
-      byDevice,
-      byReferrer
-    });
+    const result = { totalEvents, byDevice, byReferrer };
 
+    // 3️⃣ Store in Redis (TTL = 60 sec)
+    await redisClient.setex(cacheKey, 60, JSON.stringify(result));
+
+    res.json(result);
   } catch (err) {
-    return res.status(500).json({
-      message: "Error fetching analytics summary",
+    res.status(500).json({
+      message: "Error in summary",
       error: err.message,
     });
   }
