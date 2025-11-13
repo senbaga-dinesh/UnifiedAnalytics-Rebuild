@@ -8,6 +8,7 @@ import db from "./models/index.js";
 import authRoutes from "./routes/authRoutes.js";
 import { redisClient } from "./config/redis.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
+import { swaggerSpec, swaggerUi } from "./docs/swagger.js";
 
 
 
@@ -59,5 +60,6 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/analytics", analyticsRoutes);
 
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default app;
