@@ -4,7 +4,7 @@ import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
 import { sequelize } from "./config/db.js";
-
+import db from "./models/index.js";
 // Load .env file
 dotenv.config();
 
@@ -27,6 +27,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Server started on port ${PORT}`);
 });
 
+//DB
 (async () => {
   try {
     await sequelize.authenticate();
@@ -36,5 +37,14 @@ app.listen(PORT, () => {
   }
 })();
 
+// Sync models
+(async () => {
+  try {
+    await db.sequelize.sync({ alter: true });
+    console.log("✅ Database synchronized");
+  } catch (err) {
+    console.error("❌ Error syncing database:", err.message);
+  }
+})();
 
 export default app;
