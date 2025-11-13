@@ -1,0 +1,241 @@
+Unified Event Analytics API
+
+A complete backend system for event tracking, analytics, aggregation, caching, and API key management. 
+
+Built using:
+Node.js • Express • PostgreSQL • Sequelize • Redis • Jest • Swagger • Docker
+
+Features:
+
+### 1.API Key System
+
+    - Register app → generate unique 64-character API key
+    - Get API key details
+    - Regenerate API key
+    - Revoke API key
+    - List all API keys
+    - Middleware protection:
+        - Validates key
+        - Ensures active + non-expired
+        - Ensures analytics is isolated per client/app
+
+
+### 2.Event Collection
+
+    - Collect events like:
+        - event name
+        - userId
+        - device (desktop/mobile)
+        - URL
+        - referrer
+        - metadata
+    - Store in PostgreSQL
+    - Auto-invalidate Redis cache on new events
+
+
+### 3.Analytics
+
+    - Event summary
+        - Total events
+        - Group by device
+        - Group by referrer
+        - Redis caching (60 seconds)
+    - User stats
+        - Total events for user
+        - Last 10 events
+        - Group by device
+
+
+### 4.Testing
+
+    - Jest unit tests (API key utility)
+    - Jest integration tests (analytics API)
+    - Mocks for DB & Redis
+
+
+### 5.API Documentation
+
+    - Swagger at:
+        - http://localhost:5000/api/docs
+
+
+### 6.Full Docker Deployment
+
+    - Node.js
+    - PostgreSQL
+    - Redis
+
+
+### 7.Project Structure
+
+src/
+ ├── config/        → Database + Redis config
+ ├── controllers/   → Auth + Analytics logic
+ ├── middleware/    → API key validator, rate limiter
+ ├── models/        → Sequelize models (ApiKey, Event)
+ ├── routes/        → Route definitions
+ ├── tests/         → Jest tests
+ ├── utils/         → Reusable helper functions
+ └── server.js      → Main server entrypoint
+
+Dockerfile
+docker-compose.yaml
+.env
+README.md
+
+
+### 8.Database Schema
+
+### ApiKey Table
+
+| Field       | Description                |
+|-------------|----------------------------|
+| appName     | Name of the registered app |
+| ownerEmail  | Email of app owner         |
+| apiKey      | 64-char crypto key         |
+| active      | Boolean                    |
+| expiry      | Key expiration date        |
+| timestamps  | createdAt / updatedAt      |
+
+
+### Event Table
+
+| Field      | Description                     |
+|------------|---------------------------------|
+| apiKey     | FK → ApiKey                     |
+| event      | Event name (string)             |
+| userId     | User identifier                 |
+| device     | desktop / mobile                |
+| url        | Page URL                        |
+| referrer   | Source page                     |
+| metadata   | JSON                            |
+| ipAddress  | Captured automatically          |
+| timestamp  | Event time                      |
+
+
+### 9.How API Key Authentication Works (Human Explanation)
+
+Client registers using:
+    POST /api/auth/register
+Server generates a unique 64-character API key
+Client stores this key securely
+All analytics requests include:
+    x-api-key: <your_api_key>
+Middleware validates:
+    Key exists
+    Key is active
+    Key is not expired
+Every event stored with this apiKey → data isolation per app
+
+
+### 10.Analytics Flow (Visual Summary)
+
+Collect Event
+    POST /api/analytics/collect
+Saves event into DB
+Clears Redis cache:
+    Summary for all events
+    Summary for this specific event
+
+Event Summary
+    GET /api/analytics/event-summary?event=page_visit
+Returns:
+    totalEvents
+    byDevice breakdown
+    byReferrer breakdown
+Caching:
+    First fetch → PostgreSQL
+    Next 60 sec → Redis
+    New event → Cache auto-invalidated
+
+User Stats
+    GET /api/analytics/user-stats?userId=user123
+Returns:
+    totalEvents
+    last 10 events
+    device distribution
+
+
+### 11.System Architecture Diagram
+                     ┌──────────────────────┐
+                     │      Frontend /      │
+                     │    Client System     │
+                     └──────────┬───────────┘
+                                │
+                                │ HTTP + x-api-key
+                                ▼
+                     ┌──────────────────────┐
+                     │     Express API      │
+                     │   (Node.js Server)   │
+                     └──────────┬───────────┘
+                                │
+             ┌──────────────────┼───────────────────────┐
+             │                  │                       │
+             ▼                  ▼                       ▼
+   ┌────────────────┐   ┌─────────────────┐    ┌──────────────────┐
+   │  API Key Auth   │   │ Analytics Logic │    │  Swagger Docs     │
+   │  Middleware     │   │  (Controllers)  │    │   /api/docs       │
+   └────────────────┘   └─────────────────┘    └──────────────────┘
+             │                  │
+             │         Event Writes / Queries
+             ▼                  ▼
+   ┌─────────────────────────────────────────────────────────────┐
+   │                       PostgreSQL (DB)                        │
+   │       Tables: ApiKeys, Events (Sequelize ORM Models)         │
+   └─────────────────────────────────────────────────────────────┘
+                                │
+                                │ Cached Summaries (event-summary:userX)
+                                ▼
+                     ┌──────────────────────┐
+                     │         Redis         │
+                     │   (Caching Layer)     │
+                     └──────────────────────┘
+
+                         ┌────────────────────┐
+                         │     Dockerized     │
+                         │  (App + PG + Redis)│
+                         └────────────────────┘
+
+
+
+### 12.Testing:
+
+Run tests:
+    npm test
+Covers:
+    generateApiKey utility
+    analytics API (mocked Redis + DB)
+    API key validation logic
+
+
+### 13.Docker Deployment:
+
+Start complete stack:
+    docker-compose up --build
+Runs:
+    Service	Port
+    Node API	5000
+    PostgreSQL	5432
+    Redis	6379
+    Swagger Docs	/api/docs
+
+
+### 14.API Endpoints Summary
+
+### Auth
+
+| Method | Endpoint                               | Description                 |
+|--------|-----------------------------------------|-----------------------------|
+| POST   | /api/auth/register                      | Create new app + API key    |
+| GET    | /api/auth/api-key                       | Get API key details         |
+| DELETE | /api/auth/api-key/:key                  | Revoke key                  |
+| PUT    | /api/auth/api-key/:key/regenerate       | Generate new key            |
+| GET    | /api/auth/list                          | List all keys               |
+
+### Analytics
+
+| Method | Endpoint                                 | Description            |
+|--------|-------------------------------------------|------------------------|
+| POST   | /api/analytics/collect                    | Collect new event      |
+| GET    | /api/analytics/event-summary              | Summary analytics      |
+| GET    | /api/analytics/user-stats                 | Analytics per user     |
